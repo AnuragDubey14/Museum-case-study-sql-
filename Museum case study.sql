@@ -15,11 +15,40 @@ select * from product_size;
 select * from subject;
 select * from work;
 
--- 1. Fetch all the paintings which are not displayed on any museums?select * from workwhere museum_id is Null;-- 2. Are there museums without any paintings?select * from museum where museum_id not in (select museum_id from work);-- How many paintings have an asking price of more than their regular price?select count(work_id) as 'number of paintings'from product_size where sale_price>regular_price;-- 4. Identify the paintings whose asking price is less than 50% of its regular priceselect * from product_size where sale_price<regular_price*0.5;-- 5. Which canva size costs the most?with sale_price_rank as (SELECT size_id,sale_price, DENSE_RANK() over(order by sale_price desc) AS sale_price_rnk
-    FROM product_size)SELECT cs.*,spr.sale_price
+-- 1. Fetch all the paintings which are not displayed on any museums?
+
+
+select * from work
+where museum_id is Null;
+
+
+
+-- 2. Are there museums without any paintings?
+
+select * from museum where museum_id not in (select museum_id from work);
+
+
+
+-- How many paintings have an asking price of more than their regular price?
+
+select count(work_id) as 'number of paintings'
+from product_size where sale_price>regular_price;
+
+
+-- 4. Identify the paintings whose asking price is less than 50% of its regular price
+select * from product_size where sale_price<regular_price*0.5;
+
+-- 5. Which canva size costs the most?
+
+with sale_price_rank as (
+SELECT size_id,sale_price, DENSE_RANK() over(order by sale_price desc) AS sale_price_rnk
+    FROM product_size)
+
+SELECT cs.*,spr.sale_price
 FROM canvas_size cs
 INNER JOIN (select size_id,sale_price from sale_price_rank where sale_price_rnk=1
     ) spr ON cs.size_id = spr.size_id;
+
 
 
 -- 6. Delete duplicate records from work, product_size and  subject tables
@@ -51,7 +80,9 @@ DELETE FROM CTE WHERE RowNum > 1;
 select * from museum 
 	where city like '[0-9]%'
 
--- 8. Museum_Hours table has 1 invalid entry. Identify it and remove it.
+-- 8. Museum_Hours table has 1 invalid entry. Identify it and remove it.
+
+
 WITH CTE AS (
     SELECT museum_id,
            ROW_NUMBER() OVER (PARTITION BY museum_id,day ORDER BY museum_id) AS RowNum
@@ -59,7 +90,9 @@ WITH CTE AS (
 )
 DELETE FROM CTE WHERE RowNum > 1;
 
- -- 9. Fetch the top 10 most famous painting subjectselect * 
+ -- 9. Fetch the top 10 most famous painting subject
+
+select * 
 	from (
 select s.subject,count(*) as 'number of paintings'
 ,rank() over(order by count(*) desc) as ranking
@@ -102,7 +135,8 @@ group by museum_id
 order by 2 desc) mw on m.museum_id=mw.museum_id
 
 
--- 13. Who are the top 5 most popular artist? (Popularity is defined based on most no of paintings done by an artist)
+-- 13. Who are the top 5 most popular artist? (Popularity is defined based on most no of paintings done by an artist)
+
 select a.artist_id,a.full_name,a.nationality,a.style,aw.Number_of_paintings from artist a inner join
 (select top 5 artist_id,count(work_id) as 'Number_of_paintings' from work
 group by artist_id
@@ -243,7 +277,9 @@ select country,  Number_of_paintings from painting_rank_table
 where painting_rank=5;
 
 
--- 21. Which are the 3 most popular and 3 least popular painting styles?with most_least_popular_style as (select style,
+-- 21. Which are the 3 most popular and 3 least popular painting styles?
+
+with most_least_popular_style as (select style,
 dense_rank() over(order by count(work_id) desc) as desc_rank,
 dense_rank() over(order by count(work_id)) as asc_rank 
 from work
